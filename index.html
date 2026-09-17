@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elite Sports — Sialkot</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f7fa;color:#17202a}
+header{background:#111827;color:white;padding:18px 5%;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-size:28px;font-weight:800}.tag{opacity:.8;font-size:13px}
+nav button,.btn{border:0;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700}
+nav button{background:white;color:#111827;margin-left:6px}.hero{padding:45px 5%;background:white}.hero h1{font-size:42px;margin:0 0 10px}.hero p{max-width:650px;color:#566}
+.wrap{max-width:1200px;margin:auto;padding:28px 5%}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.card{background:white;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px #00000012}.card img{width:100%;height:190px;object-fit:cover;background:#e5e7eb}.pad{padding:15px}.price{font-weight:800;font-size:19px;margin:8px 0}.btn{background:#111827;color:white}.btn.alt{background:#e5e7eb;color:#111827}
+.panel{background:white;border-radius:14px;padding:20px;box-shadow:0 2px 12px #00000012;margin-bottom:20px}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,textarea,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px;margin:6px 0 12px}textarea{min-height:90px}
+.hidden{display:none}.muted{color:#6b7280}.danger{background:#b91c1c!important}.success{color:#166534}.notice{padding:12px;border-radius:8px;background:#fff7ed;margin:10px 0}
+.cartline{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:12px 0}
+footer{padding:25px 5%;background:#111827;color:white;margin-top:35px}
+@media(max-width:650px){.row{grid-template-columns:1fr}.hero h1{font-size:32px}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">ELITE SPORTS</div><div class="tag">Sialkot, Pakistan • Sports Goods</div></div>
+  <nav>
+    <button onclick="show('shop')">Shop</button>
+    <button onclick="show('cart')">Cart (<span id="cartCount">0</span>)</button>
+    <button onclick="show('admin')">Admin</button>
+  </nav>
+</header>
+
+<section class="hero">
+<h1>Sports Goods from Sialkot</h1>
+<p>Football, cricket, boxing equipment and sports accessories. Wholesale and international orders welcome.</p>
+</section>
+
+<main id="app" class="wrap"></main>
+
+<footer>Elite Sports • Sialkot, Pakistan • WhatsApp: 03091744011 • Email: maliktalib5121472@gmail.com</footer>
+
+<script>
+const KEY='elite_products_v1', CART='elite_cart_v1';
+const demo=[
+{id:1,name:'Professional Football',price:3800,category:'Football',image:'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80',description:'Quality football for training and matches.'},
+{id:2,name:'Cricket Bat',price:6500,category:'Cricket',image:'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=800&q=80',description:'Sports cricket bat.'},
+{id:3,name:'Boxing Gloves',price:3000,category:'Boxing',image:'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=800&q=80',description:'Training boxing gloves.'}
+];
+let products=JSON.parse(localStorage.getItem(KEY)||'null')||demo;
+let cart=JSON.parse(localStorage.getItem(CART)||'[]');
+let adminLogged=false;
+
+function save(){localStorage.setItem(KEY,JSON.stringify(products));localStorage.setItem(CART,JSON.stringify(cart));updateCount()}
+function updateCount(){document.getElementById('cartCount').textContent=cart.reduce((a,x)=>a+x.qty,0)}
+function show(page){
+ const a=document.getElementById('app');
+ if(page==='shop') renderShop(a);
+ if(page==='cart') renderCart(a);
+ if(page==='admin') renderAdmin(a);
+}
+function renderShop(a){
+ a.innerHTML=`<div class="panel"><h2>Our Products</h2><p class="muted">Choose a product and add it to your cart.</p></div><div class="grid">${
+ products.filter(p=>p.active!==false).map(p=>`<article class="card"><img src="${esc(p.image)}" alt=""><div class="pad"><h3>${esc(p.name)}</h3><div class="muted">${esc(p.category||'Sports')}</div><p>${esc(p.description||'')}</p><div class="price">PKR ${Number(p.price).toLocaleString()}</div><button class="btn" onclick="add(${p.id})">Add to Cart</button></div></article>`).join('')
+ }</div>`;
+}
+function add(id){let x=cart.find(i=>i.id===id);if(x)x.qty++;else cart.push({id,qty:1});save();alert('Added to cart');}
+function renderCart(a){
+ if(!cart.length){a.innerHTML='<div class="panel"><h2>Your Cart</h2><p>Cart is empty.</p></div>';return}
+ let total=0;
+ let lines=cart.map(i=>{let p=products.find(x=>x.id===i.id);if(!p)return '';total+=p.price*i.qty;return `<div class="cartline"><span>${esc(p.name)} × ${i.qty}</span><b>PKR ${(p.price*i.qty).toLocaleString()}</b></div>`}).join('');
+ let msg=encodeURIComponent('Hello Elite Sports, I want to order:\\n'+cart.map(i=>{let p=products.find(x=>x.id===i.id);return `${p.name} x ${i.qty}`}).join('\\n')+'\\nTotal: PKR '+total);
+ a.innerHTML=`<div class="panel"><h2>Your Cart</h2>${lines}<h3>Total: PKR ${total.toLocaleString()}</h3><button class="btn" onclick="location.href='https://wa.me/923091744011?text=${msg}'">Order on WhatsApp</button> <button class="btn alt" onclick="cart=[];save();renderCart(document.getElementById('app'))">Clear Cart</button></div>`;
+}
+function renderAdmin(a){
+ if(!adminLogged){
+  a.innerHTML=`<div class="panel"><h2>Admin Login</h2><p class="muted">Demo front-end login. For a truly secure online admin, connect the included Supabase setup before publishing.</p>
+  <input id="email" type="email" placeholder="Admin email"><input id="pass" type="password" placeholder="Password">
+  <button class="btn" onclick="login()">Login</button><div id="loginMsg" class="notice">This demo does not store your password.</div></div>`;
+  return;
+ }
+ a.innerHTML=`<div class="panel"><h2>Admin Panel</h2><p class="success">Admin session active.</p>
+ <form onsubmit="addProduct(event)"><div class="row"><div><label>Product name</label><input id="pn" required></div><div><label>Price (PKR)</label><input id="pp" type="number" required></div></div>
+ <div class="row"><div><label>Category</label><input id="pc" placeholder="Football / Cricket / Boxing"></div><div><label>Product image</label><input id="pi" type="file" accept="image/*" required></div></div>
+ <label>Description</label><textarea id="pd"></textarea><button class="btn">Add Product</button></form>
+ <hr><h3>Products</h3>${products.map(p=>`<div class="cartline"><span>${esc(p.name)} — PKR ${p.price}</span><button class="btn danger" onclick="del(${p.id})">Delete</button></div>`).join('')}
+ <br><button class="btn alt" onclick="adminLogged=false;show('admin')">Logout</button></div>`;
+}
+function login(){
+ // Deliberately demo-only; never treat this as secure authentication.
+ const e=document.getElementById('email').value,p=document.getElementById('pass').value;
+ if(e && p){adminLogged=true;show('admin')}else document.getElementById('loginMsg').textContent='Enter email and password.';
+}
+function addProduct(ev){
+ ev.preventDefault();const f=document.getElementById('pi').files[0];
+ if(!f)return;
+ const r=new FileReader();r.onload=()=>{products.push({id:Date.now(),name:pn.value,price:Number(pp.value),category:pc.value,image:r.result,description:pd.value,active:true});save();show('admin');};r.readAsDataURL(f);
+}
+function del(id){products=products.filter(p=>p.id!==id);save();show('admin')}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+updateCount();show('shop');
+</script>
+</body>
+</html>
